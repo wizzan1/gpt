@@ -1,0 +1,147 @@
+import random
+
+# Constants
+MAX_HEALTH = 100
+ENEMIES = ['Goblin', 'Orc', 'Troll']
+ITEMS = ['Sword', 'Shield', 'Potion']
+LOCATIONS = ['Forest', 'Town', 'Cave', 'Mountain']
+
+# Helper Functions
+def roll_dice(num_sides):
+    return random.randint(1, num_sides)
+
+# Classes
+class Player:
+    def __init__(self, name):
+        self.name = name
+        self.health = MAX_HEALTH
+        self.inventory = []
+        self.location = 'Town'
+
+    def move(self, new_location):
+        self.location = new_location
+        print(f"{self.name} moves to the {new_location}.")
+
+    def add_item(self, item):
+        self.inventory.append(item)
+        print(f"{self.name} picks up a {item}.")
+
+    def use_item(self, item):
+        if item in self.inventory:
+            if item == 'Potion':
+                self.health = min(self.health + 30, MAX_HEALTH)
+                print(f"{self.name} uses a {item}. Health is now {self.health}.")
+            self.inventory.remove(item)
+        else:
+            print(f"{item} not in inventory.")
+
+    def attack(self, enemy):
+        attack_roll = roll_dice(20)
+        if attack_roll > 10:
+            print(f"{self.name} successfully attacks the {enemy}!")
+            return True
+        else:
+            print(f"{self.name}'s attack missed!")
+            return False
+
+    def take_damage(self, amount):
+        self.health -= amount
+        if self.health <= 0:
+            print(f"{self.name} has been defeated!")
+        else:
+            print(f"{self.name} takes {amount} damage. Health is now {self.health}.")
+
+class Enemy:
+    def __init__(self, type):
+        self.type = type
+        self.health = 50
+
+    def attack(self, player):
+        attack_roll = roll_dice(20)
+        if attack_roll > 8:
+            damage = roll_dice(10)
+            print(f"The {self.type} attacks {player.name} for {damage} damage!")
+            player.take_damage(damage)
+        else:
+            print(f"The {self.type}'s attack missed!")
+
+    def take_damage(self, amount):
+        self.health -= amount
+        if self.health <= 0:
+            print(f"The {self.type} has been defeated!")
+            return True
+        else:
+            print(f"The {self.type} takes {amount} damage. Health is now {self.health}.")
+            return False
+
+# Game Logic
+def create_character():
+    name = input("Enter your character's name: ")
+    return Player(name)
+
+def choose_action(player):
+    print("\nActions: move, inventory, use item, explore, quit")
+    action = input("What will you do? ").lower()
+    return action
+
+def handle_move(player):
+    print("Locations:", ', '.join(LOCATIONS))
+    new_location = input("Where will you go? ").capitalize()
+    if new_location in LOCATIONS:
+        player.move(new_location)
+    else:
+        print("Invalid location.")
+
+def handle_inventory(player):
+    if player.inventory:
+        print("Inventory:", ', '.join(player.inventory))
+    else:
+        print("Your inventory is empty.")
+
+def handle_use_item(player):
+    if player.inventory:
+        print("Inventory:", ', '.join(player.inventory))
+        item = input("Which item will you use? ").capitalize()
+        player.use_item(item)
+    else:
+        print("Your inventory is empty.")
+
+def explore_location(player):
+    if random.choice([True, False]):
+        enemy = Enemy(random.choice(ENEMIES))
+        print(f"A wild {enemy.type} appears!")
+        while enemy.health > 0 and player.health > 0:
+            player_choice = input("Do you want to (attack) or (run)? ").lower()
+            if player_choice == 'attack':
+                if player.attack(enemy):
+                    if enemy.take_damage(roll_dice(10)):
+                        break
+            enemy.attack(player)
+            if player.health <= 0:
+                break
+    else:
+        item = random.choice(ITEMS)
+        print(f"You found a {item}!")
+        player.add_item(item)
+
+def play_game():
+    player = create_character()
+    while True:
+        action = choose_action(player)
+        if action == 'move':
+            handle_move(player)
+        elif action == 'inventory':
+            handle_inventory(player)
+        elif action == 'use item':
+            handle_use_item(player)
+        elif action == 'explore':
+            explore_location(player)
+        elif action == 'quit':
+            print("Thank you for playing!")
+            break
+        if player.health <= 0:
+            print("Game over!")
+            break
+
+if __name__ == "__main__":
+    play_game()
